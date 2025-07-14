@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>帕瓦玩具一番賞</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background-color: #fff0f5;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 36px;
+      color: #d63384;
+      margin-bottom: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      margin-bottom: 10px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    td {
+      border: 1px solid #999;
+      padding: 10px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-size: 18px;
+      background-color: #ffe6f0;
+    }
+    td.revealed {
+      background-color: #ffc1de;
+      font-weight: bold;
+      color: #000;
+    }
+    td.used {
+      background-color: #ddd;
+      cursor: not-allowed;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #c1126b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>帕瓦玩具一番賞</h1>
+
+  <p>請輸入抽獎序號：</p>
+  <input type="text" id="code" placeholder="請輸入一次性抽獎序號">
+
+  <table id="lotteryTable"></table>
+
+  <div id="result"></div>
+
+  <script>
+    const validCodes = new Set([
+      "05HIy4cUJr", "16liBM7YBk", "1ltNlPs177", "2B1LqzuinK", "31hc2TaHcf",
+      "3X9heDq0LJ", "46IOPehAkh", "4iB3rUVCay", "5Ec9p4yXF2", "5g5O3NAPij",
+      "6UIqkxxLkO", "6vFMWx2EeL", "7melZa9bmt", "8Du67IwN9b", "8ki56Xgljk",
+      "9iirF0e6YK", "AF5JEguafs", "AeTJPVwozO", "Bg7hg8Pu7d", "CBwj7k9toK",
+      "Cni9WulfLi", "DYD6wN0XtH", "EEFpabdiVI", "EMgTlR2YZK", "FKAb1URvLa",
+      "FtOWOzmXYR", "GZ8uKK5TPy", "GlyIZPKjRi", "Ht9kKNdkE3", "IMSjBkRIeg",
+      "ItoGl1PmA3", "JlKJm3rgkH", "K4HBXy0zab", "KjQGheJz9l", "LTIQNpcjff",
+      "M8oO9RpluL", "MnUF4c6D1A", "NDSMyLMqY5", "O8dCINnUxk", "OhO2vKRtXr",
+      "PJ1jETFzeh", "PkhVfJWREK", "Q7KFr6bmeK", "RA7R5ZEN9X", "RLTPeBUju4",
+      "SGzS59wLWD", "Sitzrghgza", "TMLIWNkyXJ", "UAmujKtWrp", "Uelao8uPpM",
+      "VQWttloLum", "VvDrHisgrX", "WXujy9Gvv1", "XTVqz5tjJ5", "XaCCnGzCPI",
+      "YWCcp426Kg", "Z0v8lXHyXp", "ZnnOoFf7YF", "a8ztRG1bGh", "axGWltqfUI",
+      "bEc3OAKsdt", "c5NeAGwm92", "cSXioLJIWd", "dJ2GrfdSht", "e16IDXXO2G",
+      "etUn6m0rCV", "fU7FUcYGos", "fY9AtXE2TA", "gXZONbP7ru", "hJzn78lQgD",
+      "hUq2xFUOES", "idXAMZErC7", "izeUDVdEPJ", "js8VR7EaeB", "k2lMbizOXa",
+      "l2qrBWgRb7", "lZ8PvoLRCL", "m5ycdFbK4E", "mWlUJ1xK7F", "n23pQEA3Ov",
+      "nnH62CWsYl", "omy6DqjZH7", "ozSqa9clKp", "po8hlar2Zd", "qMMLYQEzr5",
+      "qutuhf2bUr", "rWOUshbzI8", "sKH8emexW2", "sjtMM6q7ag", "tjLrd2WzNN",
+      "uBZe2K0Ozo", "ubEbtYDvm4", "vSxIvZ2VmN", "vtNjrV58sc", "wKrOZC8jzT",
+      "xRdRoOzSQL", "xnyoM9lGVv", "ycMiw5GQjs", "zI4UUxhkmg", "zs6CZXSB3V"
+    ]);
+
+    let usedCodes = new Set();
+    let numberMap = [];
+
+    // 建立隨機 1~100 位置
+    function shuffleNumbers() {
+      numberMap = Array.from({length: 100}, (_, i) => i + 1)
+        .sort(() => Math.random() - 0.5);
+    }
+
+    function generateTable() {
+      const table = document.getElementById('lotteryTable');
+      table.innerHTML = '';
+      let index = 0;
+      for (let i = 0; i < 10; i++) {
+        const row = document.createElement('tr');
+        for (let j = 0; j < 10; j++) {
+          const cell = document.createElement('td');
+          cell.textContent = '?';
+          cell.dataset.index = index;
+          cell.onclick = () => handleDraw(cell);
+          row.appendChild(cell);
+          index++;
+        }
+        table.appendChild(row);
+      }
+    }
+
+    function handleDraw(cell) {
+      const code = document.getElementById('code').value.trim();
+      if (!validCodes.has(code) || usedCodes.has(code)) {
+        alert("無效或已使用的序號");
+        return;
+      }
+      const idx = parseInt(cell.dataset.index);
+      const number = numberMap[idx];
+      cell.classList.add('revealed');
+      cell.textContent = number;
+      cell.onclick = null;
+      usedCodes.add(code);
+
+      let prize = '';
+      if (number === 1) prize = '🎉 大獎！';
+      else if (number <= 50) prize = '💰 100元購物金';
+      else prize = '💵 50元購物金';
+
+      document.getElementById('result').innerHTML =
+        `您抽中了號碼 ${number}：${prize}<br><br>📸 請截圖本畫面並出示給小編，即可折抵消費金額！`;
+    }
+
+    shuffleNumbers();
+    generateTable();
+  </script>
+</body>
+</html>

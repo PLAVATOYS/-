@@ -1,0 +1,128 @@
+<!-- 主檔案 index.html，包含顧客抽獎頁面與導向後台入口 -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <title>帕瓦玩具一番賞</title>
+  <style>
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+      background-image: url('https://i.imgur.com/1gIxtvB.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      text-align: center;
+      padding: 50px;
+      color: #333;
+    }
+    h1 {
+      color: #ff66a3;
+      font-size: 40px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 220px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #ff85c1;
+      color: white;
+    }
+    button:hover {
+      background-color: #e26aa5;
+    }
+    #result {
+      margin-top: 30px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff4080;
+    }
+    table {
+      margin: 30px auto;
+      border-collapse: collapse;
+    }
+    td {
+      border: 1px solid #ccc;
+      padding: 20px;
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      background-color: #f7d6e0;
+      color: transparent;
+    }
+    .used {
+      background-color: #ccc;
+      color: #fff;
+    }
+    .admin-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎀 帕瓦玩具一番賞 🎀</h1>
+
+  <p>請輸入您的群組暱稱與抽獎序號：</p>
+  <input type="text" id="nickname" placeholder="暱稱">
+  <br>
+  <input type="text" id="code" placeholder="抽獎序號">
+  <br>
+  <button onclick="draw()">🎁 抽獎</button>
+  <div id="result"></div>
+
+  <table id="numberTable"></table>
+
+  <a class="admin-link" href="admin.html">🔒 後台管理</a>
+
+  <script>
+    const usedCodes = {}; // 模擬：應該從伺服器取得
+    const drawData = []; // 模擬紀錄
+
+    function draw() {
+      const nickname = document.getElementById("nickname").value.trim();
+      const code = document.getElementById("code").value.trim();
+      if (!nickname || !code) {
+        alert("請完整填寫暱稱與序號");
+        return;
+      }
+      if (usedCodes[code]) {
+        document.getElementById("result").innerText = "❌ 序號已使用或無效";
+        return;
+      }
+      usedCodes[code] = true;
+      const number = Math.floor(Math.random() * 100) + 1;
+      document.getElementById("result").innerHTML = `🎉 ${nickname} 抽到號碼 ${number}<br><small>請截圖並私訊小編</small>`;
+      drawData.push({ nickname, code, number, time: new Date().toLocaleString() });
+      updateTable(number);
+    }
+
+    function updateTable(drawNumber) {
+      const table = document.getElementById("numberTable");
+      table.innerHTML = "";
+      for (let row = 0; row < 10; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < 10; col++) {
+          const num = row * 10 + col + 1;
+          const td = document.createElement("td");
+          td.textContent = num;
+          if (num === drawNumber) td.classList.add("used");
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+    }
+    updateTable();
+  </script>
+</body>
+</html>

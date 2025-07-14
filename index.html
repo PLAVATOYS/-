@@ -16,10 +16,9 @@
       color: #d63384;
       margin-bottom: 20px;
     }
-    input {
+    input, button {
       padding: 10px;
       font-size: 16px;
-      width: 250px;
       margin-bottom: 10px;
     }
     table {
@@ -31,9 +30,9 @@
       padding: 10px;
       width: 40px;
       height: 40px;
-      cursor: pointer;
       font-size: 18px;
       background-color: #ffe6f0;
+      cursor: pointer;
     }
     td.revealed {
       background-color: #ffc1de;
@@ -50,17 +49,24 @@
       color: #c1126b;
       font-weight: bold;
     }
+    #animation {
+      margin-top: 15px;
+      font-size: 24px;
+      color: #ff4fa3;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <h1>帕瓦玩具一番賞</h1>
-
   <p>請輸入抽獎序號：</p>
   <input type="text" id="code" placeholder="請輸入一次性抽獎序號">
+  <button onclick="confirmCode()">✅ 確定</button>
+
+  <div id="animation">🔄 抽獎中，請稍候...</div>
+  <div id="result"></div>
 
   <table id="lotteryTable"></table>
-
-  <div id="result"></div>
 
   <script>
     const validCodes = new Set([
@@ -86,10 +92,10 @@
       "xRdRoOzSQL", "xnyoM9lGVv", "ycMiw5GQjs", "zI4UUxhkmg", "zs6CZXSB3V"
     ]);
 
-    let usedCodes = new Set();
+    const usedCodes = new Set();
+    let currentCode = null;
     let numberMap = [];
 
-    // 建立隨機 1~100 位置
     function shuffleNumbers() {
       numberMap = Array.from({length: 100}, (_, i) => i + 1)
         .sort(() => Math.random() - 0.5);
@@ -113,26 +119,52 @@
       }
     }
 
-    function handleDraw(cell) {
+    function confirmCode() {
       const code = document.getElementById('code').value.trim();
-      if (!validCodes.has(code) || usedCodes.has(code)) {
-        alert("無效或已使用的序號");
+      if (!validCodes.has(code)) {
+        alert("❌ 無效的序號");
         return;
       }
-      const idx = parseInt(cell.dataset.index);
-      const number = numberMap[idx];
-      cell.classList.add('revealed');
-      cell.textContent = number;
-      cell.onclick = null;
-      usedCodes.add(code);
+      if (usedCodes.has(code)) {
+        alert("⚠️ 此序號已使用過");
+        return;
+      }
+      currentCode = code;
+      alert("✅ 請點選表格任一格進行抽獎！");
+    }
 
-      let prize = '';
-      if (number === 1) prize = '🎉 大獎！';
-      else if (number <= 50) prize = '💰 100元購物金';
-      else prize = '💵 50元購物金';
+    function handleDraw(cell) {
+      if (!currentCode) {
+        alert("請先輸入序號並按下確定");
+        return;
+      }
+      if (cell.classList.contains('revealed')) {
+        alert("此格已抽過，請選擇其他格。\n若此畫面非首次抽獎請重新整理");
+        return;
+      }
 
-      document.getElementById('result').innerHTML =
-        `您抽中了號碼 ${number}：${prize}<br><br>📸 請截圖本畫面並出示給小編，即可折抵消費金額！`;
+      document.getElementById('animation').style.display = 'block';
+      document.getElementById('result').innerHTML = '';
+
+      setTimeout(() => {
+        const idx = parseInt(cell.dataset.index);
+        const number = numberMap[idx];
+        cell.textContent = number;
+        cell.classList.add('revealed');
+        cell.onclick = null;
+        usedCodes.add(currentCode);
+        validCodes.delete(currentCode);
+
+        let prize = '';
+        if (number === 1) prize = '🎉 大獎！';
+        else if (number <= 50) prize = '💰 100元購物金';
+        else prize = '💵 50元購物金';
+
+        document.getElementById('animation').style.display = 'none';
+        document.getElementById('result').innerHTML =
+          `您抽中了號碼 ${number}：${prize}<br><br>📸 請截圖本畫面並出示給小編折抵！`;
+        currentCode = null;
+      }, 2000);
     }
 
     shuffleNumbers();
